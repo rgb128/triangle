@@ -9,9 +9,14 @@
 <body>
 
     <div class="virtual-world">
-        <img src="square.png" style="position: absolute; top: 0px; left: 0px; width: 1000px; height: 1000px; display: block;">
+        <div id="canvas-container">
+            <canvas id="background-canvas"></canvas>
+            <canvas id="foreground-canvas"></canvas>
+        </div>
     </div>
 
+    <script src="container.js"></script>
     <script src="app.js"></script>
+
 </body>
 </html>

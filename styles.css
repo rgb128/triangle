@@ -24,3 +24,15 @@ body, html {
     /* This is critical for the math to work */
     transform-origin: top left;
 }
+
+#canvas-container {
+    position: relative;
+    width: 500px; /* Should match CANVAS_WIDTH */
+    height: 500px; /* Should match CANVAS_HEIGHT */
+}
+
+#canvas-container canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
