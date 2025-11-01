@@ -11,21 +11,12 @@ body, html {
     overflow: hidden;
 }
 
-/* 
-    This is your virtual world. 
-    It is ALWAYS 1000x1000px.
-    The JavaScript will move and scale it.
-*/
 .virtual-world {
     position: absolute;
     top: 0;
     left: 0;
-    
-    /* The dimensions of your internal coordinate system */
     width: 2000px;
     height: 2000px;
-    
-    /* This is critical for the math to work */
     transform-origin: top left;
 }
 
@@ -39,4 +30,34 @@ body, html {
     position: absolute;
     top: 0;
     left: 0;
+}
+
+#controls-container {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    display: flex;
+    gap: 15px; /* Space between buttons */
+    z-index: 100;
+}
+
+#controls-container button {
+    font-family: monospace;
+    font-size: 16px;
+    text-transform: lowercase;
+    padding: 10px 20px;
+    border: 2px solid #2c2c2c;
+    background-color: #f0f8ff; /* A pleasant pastel color */
+    color: #2c2c2c;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#controls-container button:hover {
+    background-color: #e6e6fa; /* Slightly different pastel on hover */
+}
+
+#controls-container button:active {
+    background-color: #d8bfd8;
+    transform: translateY(1px);
 }

@@ -1,12 +1,25 @@
 'use strict';
 
-const INITIAL_PARAMS = {
-    colors: {
-        topLeft: 'red',
-        topRight: 'blue',
-        bottomRight: 'yellow',
-        bottomLeft: 'green',
-    },
+
+const colorSchemes = [
+    // 0: Sunday - "Mint & Coral"
+    { topLeft: '#a8e6cf', topRight: '#ffb3ba', bottomRight: '#f9f871', bottomLeft: '#bde0fe' },
+    // 1: Monday - "Twilight Lavender"
+    { topLeft: '#845ec2', topRight: '#ffc7c7', bottomRight: '#00c9a7', bottomLeft: '#f3d29c' },
+    // 2: Tuesday - "Deep Sea Jewels"
+    { topLeft: '#008080', topRight: '#d43790', bottomRight: '#ffc947', bottomLeft: '#4b0082' },
+    // 3: Wednesday - "Earthy Forest"
+    { topLeft: '#2c5d3d', topRight: '#ffb833', bottomRight: '#a52a2a', bottomLeft: '#87ceeb' },
+    // 4: Thursday - "Vibrant Citrus"
+    { topLeft: '#ff8b2d', topRight: '#ffef96', bottomRight: '#c1fba4', bottomLeft: '#4a8cff' },
+    // 5: Friday - "Cotton Candy Sky"
+    { topLeft: '#ff7b9c', topRight: '#a2d2ff', bottomRight: '#fff3b0', bottomLeft: '#c7bfff' },
+    // 6: Saturday - "Sunset Peach"
+    { topLeft: '#ff6f61', topRight: '#ffdab9', bottomRight: '#c56cf0', bottomLeft: '#ffda79' },
+];
+const initialParams = {
+    // colors: colorSchemes[6], // Based on the day of the week
+    colors: colorSchemes[new Date().getDay()], // Based on the day of the week
     borderColor: 'white',
     borderWidth: 10,
     minWidth: 100,
@@ -23,7 +36,7 @@ const CANVAS_HEIGHT = 2000;
 // --- Canvas Setup ---
 // The visible background canvas (bottom layer)
 const backgroundCanvas = document.getElementById('background-canvas');
-const backgroundCtx = backgroundCanvas.getContext('2d');
+const backgroundCtx = backgroundCanvas.getContext('2d', { willReadFrequently: true });
 
 // The visible foreground canvas for rectangles (top layer)
 const foregroundCanvas = document.getElementById('foreground-canvas');
@@ -76,10 +89,10 @@ const initializeCanvas = () => {
 
     const cornerRadius = Math.sqrt(CANVAS_WIDTH ** 2 + CANVAS_HEIGHT ** 2);
     const gradients = [
-        { x: 0, y: 0, color: INITIAL_PARAMS.colors.topLeft, radius: cornerRadius },
-        { x: CANVAS_WIDTH, y: 0, color: INITIAL_PARAMS.colors.topRight, radius: cornerRadius },
-        { x: CANVAS_WIDTH, y: CANVAS_HEIGHT, color: INITIAL_PARAMS.colors.bottomRight, radius: cornerRadius },
-        { x: 0, y: CANVAS_HEIGHT, color: INITIAL_PARAMS.colors.bottomLeft, radius: cornerRadius },
+        { x: 0, y: 0, color: initialParams.colors.topLeft, radius: cornerRadius },
+        { x: CANVAS_WIDTH, y: 0, color: initialParams.colors.topRight, radius: cornerRadius },
+        { x: CANVAS_WIDTH, y: CANVAS_HEIGHT, color: initialParams.colors.bottomRight, radius: cornerRadius },
+        { x: 0, y: CANVAS_HEIGHT, color: initialParams.colors.bottomLeft, radius: cornerRadius },
     ];
     
     // Draw the pure gradient ONLY on the hidden gradient canvas
@@ -104,7 +117,7 @@ foregroundCanvas.addEventListener('click', (event) => {
     const clickY = event.offsetY;
 
     // 1. Calculate the new background hue and apply it to the background canvas
-    const rotationAmount = scale(INITIAL_PARAMS.minHueRotate, INITIAL_PARAMS.maxHueRotate);
+    const rotationAmount = scale(initialParams.minHueRotate, initialParams.maxHueRotate);
     currentHueRotation += rotationAmount;
     
     // 2. Clear the background canvas and redraw the pure gradient with the filter applied.
@@ -119,18 +132,18 @@ foregroundCanvas.addEventListener('click', (event) => {
     const color = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
 
     // 4. Define the new rectangle's properties
-    const width = scale(INITIAL_PARAMS.minWidth, INITIAL_PARAMS.maxWidth);
-    const height = scale(INITIAL_PARAMS.minHeight, INITIAL_PARAMS.maxHeight);
+    const width = scale(initialParams.minWidth, initialParams.maxWidth);
+    const height = scale(initialParams.minHeight, initialParams.maxHeight);
     const rectX = clickX - width / 2;
     const rectY = clickY - height / 2;
 
     // 5. Draw the new rectangle ONLY on the FOREGROUND canvas.
     // The foreground is never cleared, so all previous rectangles remain untouched.
     foregroundCtx.fillStyle = color;
-    foregroundCtx.strokeStyle = INITIAL_PARAMS.borderColor;
-    foregroundCtx.lineWidth = INITIAL_PARAMS.borderWidth;
+    foregroundCtx.strokeStyle = initialParams.borderColor;
+    foregroundCtx.lineWidth = initialParams.borderWidth;
     foregroundCtx.fillRect(rectX, rectY, width, height);
-    if (INITIAL_PARAMS.borderWidth) {
+    if (initialParams.borderWidth) {
         foregroundCtx.strokeRect(rectX, rectY, width, height);
     }
 });
