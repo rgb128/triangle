@@ -175,4 +175,3 @@ copyButton.addEventListener('click', () => { // Note: no 'async' keyword
     });
 });
 
-console.log('new version');
