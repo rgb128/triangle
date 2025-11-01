@@ -3,8 +3,8 @@
 const virtualWorld = document.querySelector('.virtual-world');
 
 // --- The constants for your virtual space ---
-const VIRTUAL_WIDTH = 1000;
-const VIRTUAL_HEIGHT = 1000;
+const VIRTUAL_WIDTH = 2000;
+const VIRTUAL_HEIGHT = 2000;
 
 function updateTransform() {
     const viewportWidth = window.innerWidth;

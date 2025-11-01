@@ -18,8 +18,8 @@ body, html {
     left: 0;
     
     /* The dimensions of your internal coordinate system */
-    width: 1000px;
-    height: 1000px;
+    width: 2000px;
+    height: 2000px;
     
     /* This is critical for the math to work */
     transform-origin: top left;

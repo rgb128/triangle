@@ -8,17 +8,17 @@ const INITIAL_PARAMS = {
         bottomLeft: 'green',
     },
     borderColor: 'white',
-    borderWidth: 5,
-    minWidth: 50,
-    maxWidth: 500,
-    minHeight: 50,
-    maxHeight: 500,
+    borderWidth: 10,
+    minWidth: 100,
+    maxWidth: 1000,
+    minHeight: 100,
+    maxHeight: 1000,
     minHueRotate: 5,
     maxHueRotate: 15,
 };
 
-const CANVAS_WIDTH = 1000;
-const CANVAS_HEIGHT = 1000;
+const CANVAS_WIDTH = 2000;
+const CANVAS_HEIGHT = 2000;
 
 // --- Canvas Setup ---
 // The visible background canvas (bottom layer)
@@ -36,15 +36,32 @@ const gradientCtx = gradientCanvas.getContext('2d');
 // --- Global State ---
 let currentHueRotation = 0;
 
+
+const linearScale = (min, max) => {
+    // Math.random() is implicitly to the power of 1
+    const randomFactor = Math.random();
+    return min + randomFactor * (max - min);
+};
+const quadraticScale = (min, max) => {
+    const randomFactor = Math.random() ** 2;
+    return min + randomFactor * (max - min);
+};
+const cubicScale = (min, max) => {
+    const randomFactor = Math.random() ** 3;
+    return min + randomFactor * (max - min);
+};
+const power5Scale = (min, max) => {
+    const randomFactor = Math.random() ** 5;
+    return min + randomFactor * (max - min);
+};
+
 /**
  * Generates a random number using a quadratic distribution.
  * @param {number} min - The minimum value.
  * @param {number} max - The maximum value.
  * @returns {number} A random number between min and max.
  */
-const scale = (min, max) => {
-    return min + (Math.random() ** 2) * (max - min);
-};
+const scale = cubicScale;
 
 /**
  * Initializes all canvases. The pure gradient is created in memory,
