@@ -1,0 +1,26 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #111;
+}
+
+/* 
+    This is your virtual world. 
+    It is ALWAYS 1000x1000px.
+    The JavaScript will move and scale it.
+*/
+.virtual-world {
+    position: absolute;
+    top: 0;
+    left: 0;
+    
+    /* The dimensions of your internal coordinate system */
+    width: 1000px;
+    height: 1000px;
+    
+    /* This is critical for the math to work */
+    transform-origin: top left;
+}
