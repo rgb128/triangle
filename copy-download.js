@@ -6,7 +6,7 @@ const downloadButton = document.getElementById('download-button');
 // --- Constants for Watermark ---
 const WATERMARK = {
     text: '#808080',
-    font: '16px monospace',
+    font: '32px monospace',
     fillStyle: 'black',
     strokeStyle: 'white',
     lineWidth: 2,

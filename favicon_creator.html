@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Favicon Creator - Step 1</title>
+    <title>Icon Creator</title>
     <style>
         body {
             font-family: sans-serif;
@@ -45,8 +45,11 @@
 
         // --- Configuration ---
         const CANVAS_SIZE = 512;
-        const FILENAME = 'color_wheel.png';
-        
+        // The outer dimension of the square.
+        const SQUARE_SIZE = 256 + 128 + 128;
+        // The thickness of the square's border.
+        const SQUARE_STROKE_WIDTH = 128;
+        const FILENAME = 'icon.png';
         // --- End of Configuration ---
 
         const canvas = document.getElementById('favicon-canvas');
@@ -54,35 +57,56 @@
         const ctx = canvas.getContext('2d');
 
         /**
-         * Fills the canvas with a full-spectrum conic gradient.
+         * Draws the final icon by first creating a gradient and then
+         * using a hollow square shape as a mask.
          */
-        function drawGradientWheel() {
+        function drawIcon() {
             canvas.width = CANVAS_SIZE;
             canvas.height = CANVAS_SIZE;
 
-            // Calculate the center point for the gradient
+            // === STEP 1: Fill the ENTIRE canvas with the color wheel gradient ===
             const centerX = CANVAS_SIZE / 2;
             const centerY = CANVAS_SIZE / 2;
-
-            // Create a conic gradient centered in the canvas.
-            // The first argument is the start angle in radians. 0 means starting at the 3 o'clock position.
             const gradient = ctx.createConicGradient(0, centerX, centerY);
 
-            // Add color stops to create the full "hue-rotate" spectrum.
-            // The stops are percentages of the 360-degree rotation.
-            gradient.addColorStop(0,    'hsl(0, 100%, 50%)');    // Red
-            gradient.addColorStop(0.17, 'hsl(60, 100%, 50%)');   // Yellow
-            gradient.addColorStop(0.34, 'hsl(120, 100%, 50%)');  // Green
-            gradient.addColorStop(0.50, 'hsl(180, 100%, 50%)');  // Cyan
-            gradient.addColorStop(0.67, 'hsl(240, 100%, 50%)');  // Blue
-            gradient.addColorStop(0.84, 'hsl(300, 100%, 50%)');  // Magenta
-            gradient.addColorStop(1,    'hsl(360, 100%, 50%)');  // Back to Red
+            gradient.addColorStop(0,    'hsl(0, 100%, 50%)');
+            gradient.addColorStop(0.17, 'hsl(60, 100%, 50%)');
+            gradient.addColorStop(0.34, 'hsl(120, 100%, 50%)');
+            gradient.addColorStop(0.50, 'hsl(180, 100%, 50%)');
+            gradient.addColorStop(0.67, 'hsl(240, 100%, 50%)');
+            gradient.addColorStop(0.84, 'hsl(300, 100%, 50%)');
+            gradient.addColorStop(1,    'hsl(360, 100%, 50%)');
 
-            // Use the gradient as the fill style
             ctx.fillStyle = gradient;
-
-            // Fill the entire canvas with the gradient
             ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+
+            // === STEP 2: Make the "useless parts" transparent ===
+            // We set the composite operation to 'destination-in'. This means: "Keep the destination
+            // (the gradient we just drew), but ONLY where the new source shape is drawn."
+            // Everything else on the canvas will be erased (made transparent).
+            ctx.globalCompositeOperation = 'destination-in';
+
+            // Now, we draw the "stencil" or "mask" shape. The color doesn't matter, only the shape.
+            ctx.fillStyle = 'black'; // Could be any color.
+
+            // First, calculate the geometry of the outer and inner squares
+            const outerX = (CANVAS_SIZE - SQUARE_SIZE) / 2;
+            const outerY = (CANVAS_SIZE - SQUARE_SIZE) / 2;
+            
+            const innerSize = SQUARE_SIZE - (SQUARE_STROKE_WIDTH * 2);
+            const innerX = outerX + SQUARE_STROKE_WIDTH;
+            const innerY = outerY + SQUARE_STROKE_WIDTH;
+
+            // We create the hollow shape by drawing the outer rectangle and then
+            // carving out the inner one using the 'evenodd' fill rule.
+            ctx.beginPath();
+            ctx.rect(outerX, outerY, SQUARE_SIZE, SQUARE_SIZE); // The outer path
+            ctx.rect(innerX, innerY, innerSize, innerSize);     // The inner "hole" path
+            ctx.fill('evenodd'); // This fills only the space between the two rectangles.
+
+            // (Optional) Reset for any future drawing, which we don't have but is good practice.
+            ctx.globalCompositeOperation = 'source-over';
         }
 
         /**
@@ -99,7 +123,7 @@
         downloadBtn.addEventListener('click', downloadCanvas);
 
         // --- Initial Drawing ---
-        drawGradientWheel();
+        drawIcon();
     </script>
 </body>
 </html>
