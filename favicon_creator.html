@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Favicon Creator - Step 1</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #e0e0e0;
+            background-image:
+                linear-gradient(45deg, #c0c0c0 25%, transparent 25%),
+                linear-gradient(-45deg, #c0c0c0 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #c0c0c0 75%),
+                linear-gradient(-45deg, transparent 75%, #c0c0c0 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 20px;
+            gap: 20px;
+        }
+        #favicon-canvas {
+            border: 2px solid black;
+        }
+        #download-btn {
+            font-size: 16px;
+            padding: 10px 20px;
+            border: 2px solid black;
+            background-color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="favicon-canvas"></canvas>
+    <button id="download-btn">Download Image</button>
+
+    <script>
+        'use strict';
+
+        // --- Configuration ---
+        const CANVAS_SIZE = 512;
+        const FILENAME = 'color_wheel.png';
+        
+        // --- End of Configuration ---
+
+        const canvas = document.getElementById('favicon-canvas');
+        const downloadBtn = document.getElementById('download-btn');
+        const ctx = canvas.getContext('2d');
+
+        /**
+         * Fills the canvas with a full-spectrum conic gradient.
+         */
+        function drawGradientWheel() {
+            canvas.width = CANVAS_SIZE;
+            canvas.height = CANVAS_SIZE;
+
+            // Calculate the center point for the gradient
+            const centerX = CANVAS_SIZE / 2;
+            const centerY = CANVAS_SIZE / 2;
+
+            // Create a conic gradient centered in the canvas.
+            // The first argument is the start angle in radians. 0 means starting at the 3 o'clock position.
+            const gradient = ctx.createConicGradient(0, centerX, centerY);
+
+            // Add color stops to create the full "hue-rotate" spectrum.
+            // The stops are percentages of the 360-degree rotation.
+            gradient.addColorStop(0,    'hsl(0, 100%, 50%)');    // Red
+            gradient.addColorStop(0.17, 'hsl(60, 100%, 50%)');   // Yellow
+            gradient.addColorStop(0.34, 'hsl(120, 100%, 50%)');  // Green
+            gradient.addColorStop(0.50, 'hsl(180, 100%, 50%)');  // Cyan
+            gradient.addColorStop(0.67, 'hsl(240, 100%, 50%)');  // Blue
+            gradient.addColorStop(0.84, 'hsl(300, 100%, 50%)');  // Magenta
+            gradient.addColorStop(1,    'hsl(360, 100%, 50%)');  // Back to Red
+
+            // Use the gradient as the fill style
+            ctx.fillStyle = gradient;
+
+            // Fill the entire canvas with the gradient
+            ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+        }
+
+        /**
+         * Triggers the download of the canvas content.
+         */
+        function downloadCanvas() {
+            const link = document.createElement('a');
+            link.download = FILENAME;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // --- Event Listeners ---
+        downloadBtn.addEventListener('click', downloadCanvas);
+
+        // --- Initial Drawing ---
+        drawGradientWheel();
+    </script>
+</body>
+</html>
