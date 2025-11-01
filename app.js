@@ -18,7 +18,7 @@ const colorSchemes = [
     { topLeft: '#ff6f61', topRight: '#ffdab9', bottomRight: '#c56cf0', bottomLeft: '#ffda79' },
 ];
 const initialParams = {
-    // colors: colorSchemes[6], // Based on the day of the week
+    // colors: colorSchemes[6],
     colors: colorSchemes[new Date().getDay()], // Based on the day of the week
     borderColor: 'white',
     borderWidth: 10,
