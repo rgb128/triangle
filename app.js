@@ -77,6 +77,71 @@ const power5Scale = (min, max) => {
 const scale = cubicScale;
 
 /**
+ * Converts an RGB color value to HSL. Conversion formula
+ * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+ * Assumes r, g, and b are contained in the set [0, 255] and
+ * returns h, s, and l in the set [0, 1].
+ *
+ * @param   Number  r       The red color value
+ * @param   Number  g       The green color value
+ * @param   Number  b       The blue color value
+ * @return  Array           The HSL representation
+ */
+function rgbToHsl(r, g, b) {
+  r /= 255, g /= 255, b /= 255;
+  let max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h, s, l = (max + min) / 2;
+
+  if (max == min) {
+    h = s = 0; // achromatic
+  } else {
+    let d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h /= 6;
+  }
+  return [h, s, l];
+}
+
+/**
+ * Converts an HSL color value to RGB. Conversion formula
+ * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+ * Assumes h, s, and l are contained in the set [0, 1] and
+ * returns r, g, and b in the set [0, 255].
+ *
+ * @param   Number  h       The hue
+ * @param   Number  s       The saturation
+ * @param   Number  l       The lightness
+ * @return  Array           The RGB representation
+ */
+function hslToRgb(h, s, l) {
+  let r, g, b;
+
+  if (s == 0) {
+    r = g = b = l; // achromatic
+  } else {
+    function hue2rgb(p, q, t) {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1/6) return p + (q - p) * 6 * t;
+      if (t < 1/2) return q;
+      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
+    }
+    let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    let p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
+  }
+  return [r * 255, g * 255, b * 255];
+}
+
+/**
  * Initializes all canvases. The pure gradient is created in memory,
  * then drawn to the visible background canvas.
  */
@@ -108,6 +173,9 @@ const initializeCanvas = () => {
 
     // Copy the pure gradient to the visible background to start
     backgroundCtx.drawImage(gradientCanvas, 0, 0);
+
+    // This ensures the initial CSS filter matches the canvas state.
+    backgroundCanvas.style.filter = `hue-rotate(0deg)`; 
 };
 
 // --- Event Listeners ---
@@ -116,20 +184,27 @@ foregroundCanvas.addEventListener('click', (event) => {
     const clickX = event.offsetX;
     const clickY = event.offsetY;
 
-    // 1. Calculate the new background hue and apply it to the background canvas
+    // 1. Calculate the new cumulative hue rotation
     const rotationAmount = scale(initialParams.minHueRotate, initialParams.maxHueRotate);
     currentHueRotation += rotationAmount;
-    
-    // 2. Clear the background canvas and redraw the pure gradient with the filter applied.
-    // This updates the actual pixel data so we can sample the correct color.
-    backgroundCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    backgroundCtx.filter = `hue-rotate(${currentHueRotation}deg)`;
-    backgroundCtx.drawImage(gradientCanvas, 0, 0);
-    backgroundCtx.filter = 'none'; // Reset filter for future operations
 
-    // 3. Get the color from the newly rotated BACKGROUND canvas
-    const pixel = backgroundCtx.getImageData(clickX, clickY, 1, 1).data;
-    const color = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
+    // 2. FOR VISUALS: Instantly update the background canvas using the fast CSS filter.
+    // This is for the user to see and works in all browsers, including Safari.
+    backgroundCanvas.style.filter = `hue-rotate(${currentHueRotation}deg)`;
+
+    // 3. FOR DATA: Get the TRUE rotated color for the single pixel under the cursor.
+    // We do this by getting the ORIGINAL color from the hidden canvas and rotating it manually.
+
+    // a) Sample the original, un-rotated color from the hidden gradient canvas.
+    const originalPixel = gradientCtx.getImageData(clickX, clickY, 1, 1).data;
+    const [r, g, b] = [originalPixel[0], originalPixel[1], originalPixel[2]];
+
+    // b) Convert to HSL, apply our rotation, and convert back to RGB. This is instant for one pixel.
+    const [h, s, l] = rgbToHsl(r, g, b);
+    const newHue = (h + (currentHueRotation / 360)) % 1.0;
+    const [newR, newG, newB] = hslToRgb(newHue, s, l);
+
+    const color = `rgb(${newR}, ${newG}, ${newB})`;
 
     // 4. Define the new rectangle's properties
     const width = scale(initialParams.minWidth, initialParams.maxWidth);
@@ -137,8 +212,7 @@ foregroundCanvas.addEventListener('click', (event) => {
     const rectX = clickX - width / 2;
     const rectY = clickY - height / 2;
 
-    // 5. Draw the new rectangle ONLY on the FOREGROUND canvas.
-    // The foreground is never cleared, so all previous rectangles remain untouched.
+    // 5. Draw the new rectangle on the FOREGROUND canvas with the correct color.
     foregroundCtx.fillStyle = color;
     foregroundCtx.strokeStyle = initialParams.borderColor;
     foregroundCtx.lineWidth = initialParams.borderWidth;
@@ -147,6 +221,7 @@ foregroundCanvas.addEventListener('click', (event) => {
         foregroundCtx.strokeRect(rectX, rectY, width, height);
     }
 });
+
 
 // --- Initial Setup ---
 initializeCanvas();

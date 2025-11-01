@@ -60,11 +60,10 @@ const createExportCanvas = () => {
     const { scale } = getViewportTransform();
 
     // Determine the source rectangle (the visible part of the large canvases)
-    // We can find the top-left corner by inverting the transform math.
-    const sourceX = (0 - getViewportTransform().translateX) / scale;
-    const sourceY = (0 - getViewportTransform().translateY) / scale;
-    const sourceWidth = viewportWidth / scale;
-    const sourceHeight = viewportHeight / scale;
+    const sourceX = Math.round((0 - getViewportTransform().translateX) / scale);
+    const sourceY = Math.round((0 - getViewportTransform().translateY) / scale);
+    const sourceWidth = Math.round(viewportWidth / scale);
+    const sourceHeight = Math.round(viewportHeight / scale);
 
     // Create a temporary canvas matching the viewport size
     const exportCanvas = document.createElement('canvas');
@@ -72,13 +71,37 @@ const createExportCanvas = () => {
     exportCanvas.height = viewportHeight;
     const exportCtx = exportCanvas.getContext('2d');
 
-    // 1. Draw the visible part of the background canvas
-    exportCtx.drawImage(backgroundCanvas, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, viewportWidth, viewportHeight);
+    // --- 1. Draw the ACCURATE, rotated background ---
+    // Get the original pixel data for the visible area from the hidden canvas
+    const originalPixels = gradientCtx.getImageData(sourceX, sourceY, sourceWidth, sourceHeight);
+    // Create a new image data buffer to hold the rotated pixels
+    const rotatedPixels = exportCtx.createImageData(sourceWidth, sourceHeight);
+    
+    // Manually loop through and rotate the hue for each pixel
+    for (let i = 0; i < originalPixels.data.length; i += 4) {
+        const [h, s, l] = rgbToHsl(originalPixels.data[i], originalPixels.data[i+1], originalPixels.data[i+2]);
+        const newHue = (h + (currentHueRotation / 360)) % 1.0;
+        const [newR, newG, newB] = hslToRgb(newHue, s, l);
 
-    // 2. Draw the visible part of the foreground canvas on top
+        rotatedPixels.data[i] = newR;
+        rotatedPixels.data[i + 1] = newG;
+        rotatedPixels.data[i + 2] = newB;
+        rotatedPixels.data[i + 3] = originalPixels.data[i + 3]; // Keep original alpha
+    }
+
+    // To properly draw this, we need another temporary canvas
+    const tempBgCanvas = document.createElement('canvas');
+    tempBgCanvas.width = sourceWidth;
+    tempBgCanvas.height = sourceHeight;
+    tempBgCanvas.getContext('2d').putImageData(rotatedPixels, 0, 0);
+
+    // Now, draw the correctly colored (but potentially scaled) background to our export canvas
+    exportCtx.drawImage(tempBgCanvas, 0, 0, sourceWidth, sourceHeight, 0, 0, viewportWidth, viewportHeight);
+
+    // --- 2. Draw the visible part of the foreground canvas on top ---
     exportCtx.drawImage(foregroundCanvas, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, viewportWidth, viewportHeight);
 
-    // 3. Add the watermark text
+    // --- 3. Add the watermark text ---
     exportCtx.font = WATERMARK.font;
     exportCtx.fillStyle = WATERMARK.fillStyle;
     exportCtx.strokeStyle = WATERMARK.strokeStyle;
@@ -106,24 +129,72 @@ downloadButton.addEventListener('click', () => {
     link.click();
 });
 
-copyButton.addEventListener('click', async () => {
+// copyButton.addEventListener('click', async () => {
+//     copyButton.textContent = COPY_TEXT.copying;
+//     copyButton.disabled = true;
+
+//     const canvas = createExportCanvas();
+//     try {
+//         const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+//         await navigator.clipboard.write([
+//             new ClipboardItem({ 'image/png': blob })
+//         ]);
+//         copyButton.textContent = COPY_TEXT.copied;
+//     } catch (err) {
+//         console.error('Failed to copy image:', err);
+//         copyButton.textContent = COPY_TEXT.error; // Or handle error differently
+//     }
+
+//     setTimeout(() => {
+//         copyButton.textContent = COPY_TEXT.default;
+//         copyButton.disabled = false;
+//     }, COPY_TEXT.delay);
+// });
+
+// no awaits for stupid safari
+copyButton.addEventListener('click', () => { // Note: no 'async' keyword
     copyButton.textContent = COPY_TEXT.copying;
     copyButton.disabled = true;
 
     const canvas = createExportCanvas();
-    try {
-        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-        await navigator.clipboard.write([
-            new ClipboardItem({ 'image/png': blob })
-        ]);
-        copyButton.textContent = COPY_TEXT.copied;
-    } catch (err) {
-        console.error('Failed to copy image:', err);
-        copyButton.textContent = COPY_TEXT.error; // Or handle error differently
-    }
 
-    setTimeout(() => {
-        copyButton.textContent = COPY_TEXT.default;
-        copyButton.disabled = false;
-    }, COPY_TEXT.delay);
+    // 1. Create a Promise that will resolve with the blob.
+    //    The canvas.toBlob() function is asynchronous itself.
+    const blobPromise = new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+
+    // 2. We call navigator.clipboard.write() IMMEDIATELY AND SYNCHRONOUSLY.
+    //    This is the crucial step that satisfies Safari's security model.
+    //    We give it a ClipboardItem that contains the PROMISE of the blob.
+    navigator.clipboard.write([
+        new ClipboardItem({
+            'image/png': blobPromise
+        })
+    ]).then(() => {
+        // SUCCESS CASE: This code runs if the user allows permission
+        // and the blob is successfully created and copied.
+        copyButton.textContent = COPY_TEXT.copied;
+
+    }).catch(err => {
+        // FAILURE CASE: This code runs if the user denies permission,
+        // or if another error occurs.
+        console.error('Failed to copy image. Error:', err);
+        if (err.name === 'NotAllowedError') {
+             // User explicitly denied the permission prompt.
+             copyButton.textContent = 'Permission Denied';
+        } else {
+            // Another error occurred (e.g., browser doesn't support it),
+            // so we show the manual copy fallback.
+            showCopyFallback(canvas);
+            copyButton.textContent = 'Manual Copy';
+        }
+
+    }).finally(() => {
+        // ALWAYS RUNS: This code runs after success or failure to reset the button.
+        setTimeout(() => {
+            copyButton.textContent = COPY_TEXT.default;
+            copyButton.disabled = false;
+        }, COPY_TEXT.delay);
+    });
 });
+
+console.log('new version');
