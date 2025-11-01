@@ -129,28 +129,6 @@ downloadButton.addEventListener('click', () => {
     link.click();
 });
 
-// copyButton.addEventListener('click', async () => {
-//     copyButton.textContent = COPY_TEXT.copying;
-//     copyButton.disabled = true;
-
-//     const canvas = createExportCanvas();
-//     try {
-//         const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-//         await navigator.clipboard.write([
-//             new ClipboardItem({ 'image/png': blob })
-//         ]);
-//         copyButton.textContent = COPY_TEXT.copied;
-//     } catch (err) {
-//         console.error('Failed to copy image:', err);
-//         copyButton.textContent = COPY_TEXT.error; // Or handle error differently
-//     }
-
-//     setTimeout(() => {
-//         copyButton.textContent = COPY_TEXT.default;
-//         copyButton.disabled = false;
-//     }, COPY_TEXT.delay);
-// });
-
 // no awaits for stupid safari
 copyButton.addEventListener('click', () => { // Note: no 'async' keyword
     copyButton.textContent = COPY_TEXT.copying;
