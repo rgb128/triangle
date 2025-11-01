@@ -10,9 +10,9 @@ const INITIAL_PARAMS = {
     borderColor: 'white',
     borderWidth: 10,
     minWidth: 100,
-    maxWidth: 1000,
+    maxWidth: 2000,
     minHeight: 100,
-    maxHeight: 1000,
+    maxHeight: 2000,
     minHueRotate: 5,
     maxHueRotate: 15,
 };
